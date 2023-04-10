@@ -1,0 +1,11 @@
+﻿@page
+@model HLFundView.Areas.Funds.Pages.PullDataModel
+@{
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+
+<div id="puller" class="wrapper">
+    <button type="button" class="btn btn-primary btn-lg" @@click="getdata()" :disabled="buttondisabled === true">Pull Fund Data</button>
+    <button type="button" class="btn btn-primary btn-lg" @@click="getriskdata()" :disabled="buttondisabled === true">Pull Risk Data</button>
+</div>
