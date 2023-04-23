@@ -9,3 +9,10 @@
     <button type="button" class="btn btn-primary btn-lg" @@click="getdata()" :disabled="buttondisabled === true">Pull Fund Data</button>
     <button type="button" class="btn btn-primary btn-lg" @@click="getriskdata()" :disabled="buttondisabled === true">Pull Risk Data</button>
 </div>
+
+
+
+@section scripts {
+    <script src="~/js/fund.js" asp-append-version="true"></script>
+}
+    

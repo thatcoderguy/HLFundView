@@ -1,9 +1,10 @@
-﻿using HLFundView.Data;
+﻿using BitMiracle.Docotic.Pdf;
+using HLFundView.Data;
 using HLFundView.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using RestSharp;
+using System.Net;
 
 namespace HLFundView.API
 {
@@ -36,7 +37,7 @@ namespace HLFundView.API
             {
 
                 Fund realData = new Fund(fund.sedol, fund.full_description, fund.fund_name, fund.description,
-                     fund.company_id, fund.company_name, fund.unit_type, fund.running_yield, fund.historic_yield, 
+                     fund.company_id, fund.company_name, fund.unit_type, fund.running_yield, fund.historic_yield,
                      fund.distribution_yield, fund.underlying_yield, fund.gross_yield, fund.gross_running_yield, fund.kiid_url);
 
                 if (_context.Fund.Any(e => e.sedol == fund.sedol))
@@ -58,8 +59,115 @@ namespace HLFundView.API
         [HttpGet("pullriskdata")]
         public async Task<JsonResult> PullRiskData()
         {
-           
+
+            List<Fund> allFunds = _context.Fund.ToList();
+
+            foreach (Fund fund in allFunds)
+            {
+                using (var client = new WebClient())
+                {
+                    client.DownloadFile(fund.kiid_url, "blah.pdf");
+                }
+
+                using (var pdf = new PdfDocument("blah.pdf"))
+                {
+                    string formattedText = pdf.GetText();
+                    using (var writer = new StreamWriter("formatted.txt"))
+                        writer.Write(formattedText);
+                }
+
+
+            }
+
             return new JsonResult(true);
         }
+
+
+
+        [HttpGet("pulldividendcalander")]
+        public async Task<JsonResult> PullDividendCalander()
+        {
+
+            DateTime current = DateTime.Now;
+            if (current.DayOfWeek == DayOfWeek.Sunday)
+            {
+                current=current.AddDays(1);
+            }else if (current.DayOfWeek == DayOfWeek.Saturday)
+            {
+                current=current.AddDays(2);
+            }
+
+            string date = current.Year + "-" + current.Month.ToString("00") + "-" + current.Day.ToString("00");
+            List<Row> rows = GetCalanderData(date);
+
+            while (rows !=null && rows.Count > 0)
+            {
+                foreach (Row row in rows)
+                {
+                    //ex date
+                    //symbol
+                    //indicated anual dividend
+
+                    //divident rate = amount paid over year
+
+                    //
+                    
+                    ShareData share = GetShareData(row.symbol);
+
+
+
+                }
+
+                current =current.AddDays(1);
+                if (current.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    current=current.AddDays(1);
+                }
+                else if (current.DayOfWeek == DayOfWeek.Saturday)
+                {
+                    current=current.AddDays(2);
+                }
+
+                date = current.Year + "-" + current.Month.ToString("00") + "-" + current.Day.ToString("00");
+                rows = GetCalanderData(date);
+            }
+
+            return new JsonResult(true);
+        }
+
+        private ShareData GetShareData(string tickersymbol)
+        {
+            var client = new RestClient("https://api.nasdaq.com/api/quote/" + tickersymbol + "/");
+            var request = new RestRequest("info?assetclass=stocks", Method.Get);
+            request.AddHeader("Accept", "*/*");
+            request.AddHeader("User-Agent", "PostmanRuntime/7.32.2");
+
+            var queryResult = client.Execute(request);
+
+            ShareRoot myDeserializedClass = JsonConvert.DeserializeObject<ShareRoot>(queryResult.Content);
+
+            return myDeserializedClass.data;
+        }
+
+        private List<Row> GetCalanderData(string date)
+        {
+            //
+
+            var client = new RestClient("https://api.nasdaq.com/api/calendar/");
+
+            var request = new RestRequest("dividends?date=" + date, Method.Get);
+            request.AddHeader("Accept", "*/*");
+            request.AddHeader("User-Agent", "PostmanRuntime/7.32.2");
+
+            //request.OnBeforeDeserialization = resp => { resp.Headers. };
+
+            var queryResult = client.Execute(request);
+
+            CalanderRoot myDeserializedClass = JsonConvert.DeserializeObject<CalanderRoot>(queryResult.Content);
+
+            return myDeserializedClass.data.calendar.rows;
+        }
+
+
     }
 }

@@ -10,6 +10,17 @@ namespace HLFundView.Data
             : base(options)
         {
         }
-        public DbSet<HLFundView.Models.Fund>? Fund { get; set; }
+        public DbSet<Fund> Fund { get; set; }
+
+        public DbSet<Dividend> Dividends { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Dividend>()
+                  .HasKey(m => new { m.Symbol, m.DividendExDate });
+        }
     }
+
 }

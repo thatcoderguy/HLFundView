@@ -1,0 +1,16 @@
+﻿@page
+@model HLFundView.Converter.Pages.IndexModel
+@{
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<div id="puller" class="wrapper">
+    <button type="button" class="btn btn-primary btn-lg" @@click="getdividentcalander()" :disabled="buttondisabled === true">Pull Dividend Calender Data</button>
+
+</div>
+
+
+@section scripts {
+    <script src="~/js/dividend.js" asp-append-version="true"></script>
+}
+    
