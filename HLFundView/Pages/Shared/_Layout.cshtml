@@ -25,14 +25,21 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="Funds" asp-page="/PullData">Pull Data</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="Dividends" asp-page="/Index">Dividend</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Dividend
+                            </a>
+                            <div class="dropdown-menu nav-item" aria-labelledby="navbarDropdownMenuLink">
+                                <a class="dropdown-item nav-item" asp-area="Dividends" asp-page="/Index">Pull Data</a>
+                                <a class="dropdown-item nav-item" asp-area="Dividends" asp-page="/DivdendViewer">View</a>
+                            </div>
                         </li>
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>
             </div>
         </nav>
+
     </header>
     <div class="container">
         <main role="main" class="pb-3">
@@ -49,6 +56,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/vue@2.js"></script>
+    <script src="~/js/site.js"></script>
 
 
     @await RenderSectionAsync("Scripts", required: false)
