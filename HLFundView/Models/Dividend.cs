@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace HLFundView.Models
 {
@@ -49,7 +50,8 @@ namespace HLFundView.Models
 
         public void UpdateCurrentPrice(string currentprice)
         {
-            CurrentSharePrice = double.Parse(currentprice, NumberStyles.AllowCurrencySymbol | NumberStyles.Currency);
+            CurrentSharePrice = double.Parse(Regex.Match(currentprice, @"-?\d{1,3}(,\d{3})*(\.\d+)?").Value);
+
             DividendPercent = (100 / CurrentSharePrice) * DividendAmount;
         }
     }

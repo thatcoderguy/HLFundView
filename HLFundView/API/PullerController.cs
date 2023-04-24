@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Newtonsoft.Json;
 using RestSharp;
 using System;
+using System.Data;
 using System.Globalization;
 using System.Net;
 
@@ -170,15 +171,26 @@ namespace HLFundView.API
             List<Dividend> dividends = _context.Dividends.Where(x => x.DividendExDate > DateTime.Now).ToList();
 
             foreach(Dividend dividend in dividends) {
-                ShareData share = GetShareData(dividend.Symbol);
 
-                dividend.UpdateCurrentPrice(share.primaryData.lastSalePrice);
+                ShareData share;
 
-                _context.Dividends.Attach(dividend);
-                _context.Entry(dividend).Property(x => x.DividendPercent).IsModified = true;
-                _context.Entry(dividend).Property(x => x.CurrentSharePrice).IsModified = true;
+                try {
+                    share = GetShareData(dividend.Symbol);
 
-                await _context.SaveChangesAsync();
+                    dividend.UpdateCurrentPrice(share.primaryData.lastSalePrice);
+
+                    _context.Dividends.Attach(dividend);
+                    _context.Entry(dividend).Property(x => x.DividendPercent).IsModified = true;
+                    _context.Entry(dividend).Property(x => x.CurrentSharePrice).IsModified = true;
+
+                    await _context.SaveChangesAsync();
+                }
+                catch(Exception)
+                {
+
+                }
+
+
             }
 
             return new JsonResult(true);
@@ -194,6 +206,9 @@ namespace HLFundView.API
             var queryResult = client.Execute(request);
 
             ShareRoot myDeserializedClass = JsonConvert.DeserializeObject<ShareRoot>(queryResult.Content);
+
+            if (myDeserializedClass.data == null)
+                throw new Exception();
 
             return myDeserializedClass.data;
         }
