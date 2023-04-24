@@ -19,7 +19,7 @@ namespace HLFundView.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Dividend>()
-                  .HasKey(m => new { m.Symbol, m.DividendExDate });
+                  .HasKey(m => new { m.Symbol, m.DividendExDate, m.DividendAmount });
         }
     }
 

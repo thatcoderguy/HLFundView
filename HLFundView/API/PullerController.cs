@@ -3,6 +3,7 @@ using HLFundView.Data;
 using HLFundView.Models;
 using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Newtonsoft.Json;
 using RestSharp;
 using System;
@@ -120,22 +121,19 @@ namespace HLFundView.API
 
                         //ShareData share = GetShareData(row.symbol);
 
-                        Dividend div = new Dividend(row.symbol, row.companyName, row.dividend_Rate, row.dividend_Ex_Date);
+                        Dividend div = new Dividend(row.symbol, row.companyName, row.indicated_Annual_Dividend, row.dividend_Ex_Date);
 
-                        if (_context.Dividends.Any(e => e.Symbol == row.symbol && e.DividendExDate == DateTime.Parse(row.dividend_Ex_Date, new CultureInfo("en-US", false))))
-                        {
-                            _context.Dividends.Attach(div);
-                            _context.Entry(div).Property(x => x.DividendAmount).IsModified = true;
-                        }
-                        else
+                        if (!_context.Dividends.Any(e => e.Symbol == row.symbol 
+                                && e.DividendExDate == DateTime.Parse(row.dividend_Ex_Date, new CultureInfo("en-US", false))
+                                && e.DividendAmount ==row.indicated_Annual_Dividend))
                         {
                             _context.Dividends.Add(div);
                         }
-
-                        await _context.SaveChangesAsync();
+                        
                     }
                 }
 
+                await _context.SaveChangesAsync();
 
                 current =current.AddDays(1);
                 if (current.DayOfWeek == DayOfWeek.Sunday)
@@ -148,7 +146,15 @@ namespace HLFundView.API
                 }
 
                 date = current.Year + "-" + current.Month.ToString("00") + "-" + current.Day.ToString("00");
-                rows = GetCalanderData(date);
+
+               
+                try {
+                    rows = GetCalanderData(date);
+                }catch(Exception )
+                {
+                    rows = new List<Row>();
+                }
+                
 
                 count++;
             }
@@ -206,7 +212,19 @@ namespace HLFundView.API
 
             var queryResult = client.Execute(request);
 
-            CalanderRoot myDeserializedClass = JsonConvert.DeserializeObject<CalanderRoot>(queryResult.Content);
+            CalanderRoot myDeserializedClass;
+
+            try
+            {
+                myDeserializedClass = JsonConvert.DeserializeObject<CalanderRoot>(queryResult.Content);
+
+                if (myDeserializedClass.data == null)
+                    return new List<Row>();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
 
             return myDeserializedClass.data.calendar.rows;
         }

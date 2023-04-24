@@ -4,6 +4,7 @@ using HLFundView.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HLFundView.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230424142757_added extra field to dividend PK")]
+    partial class addedextrafieldtodividendPK
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,10 +34,6 @@ namespace HLFundView.Data.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnOrder(1);
 
-                    b.Property<double>("DividendAmount")
-                        .HasColumnType("float")
-                        .HasColumnOrder(2);
-
                     b.Property<string>("CompanyName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -43,10 +41,14 @@ namespace HLFundView.Data.Migrations
                     b.Property<double>("CurrentSharePrice")
                         .HasColumnType("float");
 
+                    b.Property<double>("DividendAmount")
+                        .HasColumnType("float")
+                        .HasColumnOrder(2);
+
                     b.Property<double>("DividendPercent")
                         .HasColumnType("float");
 
-                    b.HasKey("Symbol", "DividendExDate", "DividendAmount");
+                    b.HasKey("Symbol", "DividendExDate");
 
                     b.ToTable("Dividends");
                 });

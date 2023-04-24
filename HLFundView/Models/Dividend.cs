@@ -11,6 +11,7 @@ namespace HLFundView.Models
         public string CompanyName { get; set; }
         public double CurrentSharePrice { get; set; }
         public double DividendPercent { get; set; }
+        [Key, Column(Order = 2)]
         public double DividendAmount { get; set; }
         [Key, Column(Order = 1)]
         public DateTime DividendExDate { get; set; }
