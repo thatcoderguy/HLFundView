@@ -15,22 +15,41 @@ namespace HLFundView.Models
         [Key, Column(Order = 1)]
         public DateTime DividendExDate { get; set; }
 
-        public Dividend(string symbol, string companyname, string currentprice, double dividendamount, DateTime exdate)
+        public Dividend(string symbol, string companyname, string currentprice, double dividendamount, string exdate)
         {
             Symbol = symbol;
             CompanyName = companyname;
             DividendAmount = dividendamount;
-            DividendExDate = exdate;
 
             CurrentSharePrice = double.Parse(currentprice, NumberStyles.AllowCurrencySymbol | NumberStyles.Currency);
 
             //div% = 100 / lastSalePrice * dividend
             DividendPercent = (100 / CurrentSharePrice) * DividendAmount;
+
+            DividendExDate = DateTime.Parse(exdate);
+        }
+
+        public Dividend(string symbol, string companyname, double dividendamount, string exdate)
+        {
+            Symbol = symbol;
+            CompanyName = companyname;
+            DividendAmount = dividendamount;
+
+            //div% = 100 / lastSalePrice * dividend
+
+
+            DividendExDate = DateTime.Parse(exdate, new CultureInfo("en-US", false));
         }
 
         public Dividend()
         {
 
+        }
+
+        public void UpdateCurrentPrice(string currentprice)
+        {
+            CurrentSharePrice = double.Parse(currentprice, NumberStyles.AllowCurrencySymbol | NumberStyles.Currency);
+            DividendPercent = (100 / CurrentSharePrice) * DividendAmount;
         }
     }
 }

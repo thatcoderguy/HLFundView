@@ -33,6 +33,27 @@ var vm = new Vue({
                 }
             }.bind(xhr, this);
             xhr.send();
+        },
+        getsharedata: function () {
+
+            vm.buttondisabled = true;
+
+            var xhr = new XMLHttpRequest();
+            var url = "/api/puller/pullsharedata/";
+            xhr.open("GET", url, false);
+            xhr.onreadystatechange = function () {
+                if (this.readyState === XMLHttpRequest.DONE) {
+                    if (this.status === 200) {
+
+                        var responsedata = JSON.parse(this.responseText);
+
+                        console.log(responsedata);
+
+                        vm.buttondisabled = false;
+                    }
+                }
+            }.bind(xhr, this);
+            xhr.send();
         }
     }
 

@@ -1,9 +1,12 @@
 ﻿using BitMiracle.Docotic.Pdf;
 using HLFundView.Data;
 using HLFundView.Models;
+using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using RestSharp;
+using System;
+using System.Globalization;
 using System.Net;
 
 namespace HLFundView.API
@@ -82,12 +85,10 @@ namespace HLFundView.API
             return new JsonResult(true);
         }
 
-
-
         [HttpGet("pulldividendcalander")]
         public async Task<JsonResult> PullDividendCalander()
         {
-
+            int count = 1;
             DateTime current = DateTime.Now;
             if (current.DayOfWeek == DayOfWeek.Sunday)
             {
@@ -98,25 +99,43 @@ namespace HLFundView.API
             }
 
             string date = current.Year + "-" + current.Month.ToString("00") + "-" + current.Day.ToString("00");
+
             List<Row> rows = GetCalanderData(date);
 
-            while (rows !=null && rows.Count > 0)
+            while (count < 365)
             {
-                foreach (Row row in rows)
-                {
-                    //ex date
-                    //symbol
-                    //indicated anual dividend
+                if (rows == null || rows.Count == 0)
+                { }
+                else {
+                    foreach (Row row in rows)
+                    {
+                        //ex date
+                        //symbol
+                        //indicated anual dividend
 
-                    //divident rate = amount paid over year
+                        //divident rate = amount paid over year
 
-                    //
-                    
-                    ShareData share = GetShareData(row.symbol);
+                        Console.WriteLine(date);
+                        Console.WriteLine(row.symbol);
 
+                        //ShareData share = GetShareData(row.symbol);
 
+                        Dividend div = new Dividend(row.symbol, row.companyName, row.dividend_Rate, row.dividend_Ex_Date);
 
+                        if (_context.Dividends.Any(e => e.Symbol == row.symbol && e.DividendExDate == DateTime.Parse(row.dividend_Ex_Date, new CultureInfo("en-US", false))))
+                        {
+                            _context.Dividends.Attach(div);
+                            _context.Entry(div).Property(x => x.DividendAmount).IsModified = true;
+                        }
+                        else
+                        {
+                            _context.Dividends.Add(div);
+                        }
+
+                        await _context.SaveChangesAsync();
+                    }
                 }
+
 
                 current =current.AddDays(1);
                 if (current.DayOfWeek == DayOfWeek.Sunday)
@@ -130,6 +149,30 @@ namespace HLFundView.API
 
                 date = current.Year + "-" + current.Month.ToString("00") + "-" + current.Day.ToString("00");
                 rows = GetCalanderData(date);
+
+                count++;
+            }
+
+            return new JsonResult(true);
+        }
+
+
+
+        [HttpGet("pullsharedata")]
+        public async Task<JsonResult> PullShareData()
+        {
+            List<Dividend> dividends = _context.Dividends.Where(x => x.DividendExDate > DateTime.Now).ToList();
+
+            foreach(Dividend dividend in dividends) {
+                ShareData share = GetShareData(dividend.Symbol);
+
+                dividend.UpdateCurrentPrice(share.primaryData.lastSalePrice);
+
+                _context.Dividends.Attach(dividend);
+                _context.Entry(dividend).Property(x => x.DividendPercent).IsModified = true;
+                _context.Entry(dividend).Property(x => x.CurrentSharePrice).IsModified = true;
+
+                await _context.SaveChangesAsync();
             }
 
             return new JsonResult(true);
