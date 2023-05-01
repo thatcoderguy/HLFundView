@@ -12,10 +12,13 @@ namespace HLFundView.Models
         public string CompanyName { get; set; }
         public double CurrentSharePrice { get; set; }
         public double DividendPercent { get; set; }
+
         [Key, Column(Order = 2)]
         public double DividendAmount { get; set; }
+
         [Key, Column(Order = 1)]
         public DateTime DividendExDate { get; set; }
+
         public string Market { get; set; }
 
         public Dividend(string symbol, string companyname, string currentprice, double dividendamount, string exdate, string market)
@@ -65,7 +68,7 @@ namespace HLFundView.Models
 
         public void UpdateCurrentPrice(string currentprice)
         {
-            CurrentSharePrice = double.Parse(Regex.Match(currentprice, @"-?\d{1,3}(,\d{3})*(\.\d+)?").Value);
+            CurrentSharePrice = double.Parse(Regex.Match(currentprice, @"-?\d{1,10}(,\d{10})*(\.\d+)?").Value);
 
             DividendPercent = (100 / CurrentSharePrice) * DividendAmount;
         }
@@ -73,31 +76,27 @@ namespace HLFundView.Models
 
         public void AddPriceAndDividendData(string currentprice, string dividend)
         {
+            bool highprice = false;
+            bool highdiv = false;
 
-            if (currentprice[currentprice.Length-1] == 'p')
-            {
-                CurrentSharePrice = double.Parse(Regex.Match(currentprice, @"-?\d{1,3}(,\d{3})*(\.\d+)?").Value);
-                CurrentSharePrice = CurrentSharePrice / 100;
-            }
-            else
-            {
-                CurrentSharePrice = double.Parse(Regex.Match(currentprice, @"-?\d{1,3}(,\d{3})*(\.\d+)?").Value);
+            if (currentprice[currentprice.Length - 1] == 'p')
+                highprice = true;
+
+            CurrentSharePrice = double.Parse(Regex.Match(currentprice, @"-?\d{1,10}(,\d{10})*(\.\d+)?").Value);
+
+
+            if (dividend[dividend.Length - 1] == 'p')
+                highdiv = true;
                 
-            }
-
-
-            if (dividend[dividend.Length-1] == 'p')
-            {
-                DividendAmount = double.Parse(Regex.Match(dividend, @"-?\d{1,3}(,\d{3})*(\.\d+)?").Value);
-                DividendAmount = DividendAmount / 100;
-            }
-            else
-            {
-                DividendAmount = double.Parse(Regex.Match(dividend, @"-?\d{1,3}(,\d{3})*(\.\d+)?").Value);
-               
-            }
-
+            DividendAmount = double.Parse(Regex.Match(dividend, @"-?\d{1,10}(,\d{10})*(\.\d+)?").Value);
+   
             DividendPercent = (100 / CurrentSharePrice) * DividendAmount;
+
+            if (highprice)
+                CurrentSharePrice = CurrentSharePrice / 100;
+
+            if (highdiv)
+                DividendAmount = DividendAmount / 100;
         }
     }
 }

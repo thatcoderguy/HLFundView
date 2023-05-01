@@ -31,7 +31,9 @@ $(document).ready(function () {
                                 dividendExDate: "Ex-Date",
                                 market: "Market"
                             },
-                            sortable: ['symbol', 'companyName', 'currentSharePrice', 'dividendPercent', 'dividendAmount', 'dividendExDate', 'market']
+                            sortable: ['symbol', 'companyName', 'currentSharePrice', 'dividendPercent', 'dividendAmount', 'dividendExDate', 'market'],
+                            pagination: { chunk: 100000, dropdown: false },
+                            perPage: 50000,
                         }
                     }
                 });
@@ -45,44 +47,3 @@ $(document).ready(function () {
 
 
 });
-
-function getData() {
-    /*
-    console.log([{
-        uid: "ZW",
-        name: "Zimbabwe"
-    }, {
-        uid: "ZM",
-        name: "Zambia"
-    }]);
-    
-    return [{
-        uid: "ZW",
-        name: "Zimbabwe"
-    }, {
-        uid: "ZM",
-        name: "Zambia"
-    }];*/
-
-
-
-    var xhr = new XMLHttpRequest();
-    var url = "/api/dividend/getdividenddata/";
-    xhr.open("GET", url, false);
-    xhr.onreadystatechange = function () {
-        if (this.readyState === XMLHttpRequest.DONE) {
-            if (this.status === 200) {
-
-                var responsedata = JSON.parse(this.responseText);
-                console.log(responsedata);
-                return responsedata;
-                
-
-            }
-        }
-    }.bind(xhr, this);
-    xhr.send();
-
-
-
-}

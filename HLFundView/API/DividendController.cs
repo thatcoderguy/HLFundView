@@ -1,4 +1,5 @@
-﻿using HLFundView.Data;
+﻿using HLFundView.Converter;
+using HLFundView.Data;
 using HLFundView.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -22,9 +23,9 @@ namespace HLFundView.API
         public async Task<JsonResult> GetDividendData()
         {
             DividendData divs = new DividendData();
-            divs.Dividends = _context.Dividends.ToList();
-
-            return new JsonResult(divs.Dividends);
+            divs.Dividends = _context.Dividends.Where(x => x.DividendExDate >= DateTime.Now).ToList();
+            
+            return new JsonResult(DivdendToViewDividend.Convert(divs.Dividends));
         }
      }
 }

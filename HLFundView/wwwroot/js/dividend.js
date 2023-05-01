@@ -27,7 +27,7 @@ var vm = new Vue({
                         var responsedata = JSON.parse(this.responseText);
 
                         console.log(responsedata);
-
+                        alert('done');
                         vm.buttondisabled = false;
                     }
                 }
@@ -48,7 +48,7 @@ var vm = new Vue({
                         var responsedata = JSON.parse(this.responseText);
 
                         console.log(responsedata);
-
+                        alert('done');
                         vm.buttondisabled = false;
                     }
                 }
@@ -69,7 +69,7 @@ var vm = new Vue({
                         var responsedata = JSON.parse(this.responseText);
 
                         console.log(responsedata);
-
+                        alert('done');
                         vm.buttondisabled = false;
                     }
                 }
