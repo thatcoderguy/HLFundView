@@ -5,8 +5,32 @@
 }
 
 
+<div id="tapp" v-cloak>
+  <v-client-table :columns="columns" v-model="data" :options="options">
+    <a slot="uri" slot-scope="props" target="_blank" :href="props.row.uri" class="glyphicon glyphicon-eye-open"></a>
+
+    <div slot="child_row" slot-scope="props">
+      The link to {{props.row.name}} is <a :href="props.row.uri">{{props.row.uri}}</a>
+    </div>
+
+    <div slot="name" slot-scope="{row, update, setEditing, isEditing, revertValue}">
+      <span @@click="setEditing(true)" v-if="!isEditing()">
+        <a>{{row.name}}</a>
+      </span>
+      <span v-else>
+        <input type="text" v-model="row.name">
+        <button type="button" class="btn btn-info btn-xs" @@click="update(row.name); setEditing(false)">Submit</button>
+       <button type="button" class="btn btn-default btn-xs" @@click="revertValue(); setEditing(false)">Cancel</button>
+      
+      </span>
+
+    </div>
+
+  </v-client-table>
+</div>
 
 
 @section scripts {
+    <script src="~/js/vue-tables-2.min.js" asp-append-version="true"></script>
     <script src="~/js/dividendviewer.js" asp-append-version="true"></script>
 }
