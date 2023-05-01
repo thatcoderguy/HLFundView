@@ -19,6 +19,7 @@ namespace HLFundView.Models
         [Key, Column(Order = 1)]
         public DateTime DividendExDate { get; set; }
 
+        [Key, Column(Order = 3)]
         public string Market { get; set; }
 
         public Dividend(string symbol, string companyname, string currentprice, double dividendamount, string exdate, string market)

@@ -125,13 +125,15 @@ namespace HLFundView.API
 
                 if (!_context.Dividends.Any(e => e.Symbol == cols[0].InnerText
                     && e.DividendExDate == DateTime.Parse(cols[7].InnerText, new CultureInfo("en-US", false))
-                    && e.DividendAmount == div.DividendAmount))
+                    && e.DividendAmount == div.DividendAmount
+                    && e.Market == "LSE"))
                 {
                     _context.Dividends.Add(div);
+                    _context.Entry(div).State = Microsoft.EntityFrameworkCore.EntityState.Added;
                 }
             }
 
-            _context.SaveChangesAsync();
+           await _context.SaveChangesAsync();
 
             return new JsonResult(true);
         }
@@ -184,19 +186,25 @@ namespace HLFundView.API
             XmlNodeList rows = data.SelectSingleNode("//result/dividends").SelectNodes("item");
 
             foreach (XmlNode row in rows)
-            {           
+            {
 
-                Dividend div = new Dividend(row.SelectSingleNode("ticker").InnerText, row.SelectSingleNode("name").InnerText, dividendamount: row.SelectSingleNode("dividend").InnerText, row.SelectSingleNode("ex_dividend_date").InnerText, "NYSE");
-               
-                if (!_context.Dividends.Any(e => e.Symbol == row.SelectSingleNode("ticker").InnerText
-                    && e.DividendExDate == DateTime.Parse(row.SelectSingleNode("ex_dividend_date").InnerText, new CultureInfo("en-US", false))
-                    && e.DividendAmount == div.DividendAmount))
-                {
-                    _context.Dividends.Add(div);
+                if (row.SelectSingleNode("exchange").InnerText != "NYSE")
+                { 
+
+                    Dividend div = new Dividend(row.SelectSingleNode("ticker").InnerText, row.SelectSingleNode("name").InnerText, dividendamount: row.SelectSingleNode("dividend").InnerText, row.SelectSingleNode("ex_dividend_date").InnerText, "NYSE");
+
+                    if (!_context.Dividends.Any(e => e.Symbol == row.SelectSingleNode("ticker").InnerText
+                        && e.DividendExDate == DateTime.Parse(row.SelectSingleNode("ex_dividend_date").InnerText, new CultureInfo("en-US", false))
+                        && e.DividendAmount == div.DividendAmount
+                        && e.Market == "NYSE"))
+                    {
+                        _context.Dividends.Add(div);
+                        _context.Entry(div).State = Microsoft.EntityFrameworkCore.EntityState.Added;
+                    }
                 }
             }
 
-            _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             return new JsonResult(true);
         }
@@ -242,9 +250,11 @@ namespace HLFundView.API
 
                         if (!_context.Dividends.Any(e => e.Symbol == row.symbol 
                                 && e.DividendExDate == DateTime.Parse(row.dividend_Ex_Date, new CultureInfo("en-US", false))
-                                && e.DividendAmount ==row.indicated_Annual_Dividend))
+                                && e.DividendAmount ==row.indicated_Annual_Dividend
+                                && e.Market == "NASDAQ"))
                         {
                             _context.Dividends.Add(div);
+                            _context.Entry(div).State = Microsoft.EntityFrameworkCore.EntityState.Added;
                         }
                         
                     }
