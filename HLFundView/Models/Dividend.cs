@@ -36,6 +36,17 @@ namespace HLFundView.Models
             DividendExDate = DateTime.Parse(exdate);
         }
 
+        public Dividend(string symbol, string companyname, string dividendamount, string exdate, string market)
+        {
+            Symbol = symbol;
+            CompanyName = companyname;
+            DividendAmount = double.Parse(Regex.Match(dividendamount, @"-?\d{1,10}(,\d{10})*(\.\d+)?").Value);
+            Market = market;
+
+        
+            DividendExDate = DateTime.Parse(exdate);
+        }
+
         public Dividend(string symbol, string companyname, double dividendamount, string exdate, string market)
         {
             Symbol = symbol;
@@ -73,6 +84,13 @@ namespace HLFundView.Models
             DividendPercent = (100 / CurrentSharePrice) * DividendAmount;
         }
 
+
+        public void UpdateCurrentPrice(double currentprice)
+        {
+            CurrentSharePrice = currentprice;
+
+            DividendPercent = (100 / CurrentSharePrice) * DividendAmount;
+        }
 
         public void AddPriceAndDividendData(string currentprice, string dividend)
         {

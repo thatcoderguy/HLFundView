@@ -18,7 +18,7 @@ var vm = new Vue({
             vm.buttondisabled = true;
 
             var xhr = new XMLHttpRequest();
-            var url = "/api/puller/pulldividendcalander/";
+            var url = "/api/puller/pullnsasdaqdividendcalander/";
             xhr.open("GET", url, false);
             xhr.onreadystatechange = function () {
                 if (this.readyState === XMLHttpRequest.DONE) {
@@ -39,7 +39,28 @@ var vm = new Vue({
             vm.buttondisabled = true;
 
             var xhr = new XMLHttpRequest();
-            var url = "/api/puller/pullsharedata/";
+            var url = "/api/puller/pullnasdaqsharedata/";
+            xhr.open("GET", url, false);
+            xhr.onreadystatechange = function () {
+                if (this.readyState === XMLHttpRequest.DONE) {
+                    if (this.status === 200) {
+
+                        var responsedata = JSON.parse(this.responseText);
+
+                        console.log(responsedata);
+                        alert('done');
+                        vm.buttondisabled = false;
+                    }
+                }
+            }.bind(xhr, this);
+            xhr.send();
+        },
+        getnysesharedata: function () {
+
+            vm.buttondisabled = true;
+
+            var xhr = new XMLHttpRequest();
+            var url = "/api/puller/pullnysesharedata/";
             xhr.open("GET", url, false);
             xhr.onreadystatechange = function () {
                 if (this.readyState === XMLHttpRequest.DONE) {
@@ -61,6 +82,27 @@ var vm = new Vue({
    
             var xhr = new XMLHttpRequest();
             var url = "/api/puller/pulllsedividenddata/";
+            xhr.open("GET", url, false);
+            xhr.onreadystatechange = function () {
+                if (this.readyState === XMLHttpRequest.DONE) {
+                    if (this.status === 200) {
+
+                        var responsedata = JSON.parse(this.responseText);
+
+                        console.log(responsedata);
+                        alert('done');
+                        vm.buttondisabled = false;
+                    }
+                }
+            }.bind(xhr, this);
+            xhr.send();
+        },
+        getnysedividenddata: function () {
+
+            vm.buttondisabled = true;
+
+            var xhr = new XMLHttpRequest();
+            var url = "/api/puller/pullnysedividenddata/";
             xhr.open("GET", url, false);
             xhr.onreadystatechange = function () {
                 if (this.readyState === XMLHttpRequest.DONE) {

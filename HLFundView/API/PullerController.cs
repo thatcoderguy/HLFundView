@@ -11,6 +11,7 @@ using System;
 using System.Data;
 using System.Globalization;
 using System.Net;
+using System.Xml;
 
 namespace HLFundView.API
 {
@@ -135,7 +136,74 @@ namespace HLFundView.API
             return new JsonResult(true);
         }
 
-        [HttpGet("pulldividendcalander")]
+
+
+        [HttpGet("pullnysedividenddata")]
+        public async Task<JsonResult> PullNYSEDividendData()
+        {
+
+            var client = new RestClient("https://api.benzinga.com/api/v2.1/calendar/");
+
+            DateTime current = DateTime.Now;
+            string fromdate = current.Year + "-" + current.Month.ToString("00") + "-" + current.Day.ToString("00");
+            current = current.AddYears(1);
+            string todate = current.Year + "-" + current.Month.ToString("00") + "-" + current.Day.ToString("00");
+            //2023-05-01
+            var request = new RestRequest("dividends?token=1c2735820e984715bc4081264135cb90&parameters[date_from]=" + fromdate + "&parameters[date_to]=" + todate + "&parameters[date_sort]=ex&pagesize=1000000", Method.Get);
+
+            var queryResult = client.Execute(request);
+
+            XmlDocument data = new XmlDocument();
+            data.LoadXml(queryResult.Content);
+
+
+            /*<result>
+            < dividends is_array = "true" >
+            < item >
+                        < dividend_type > Cash </ dividend_type >
+                    < record_date > 2024 - 03 - 15 </ record_date >
+                    < end_regular_dividend > false </ end_regular_dividend >
+                    < notes />
+                    < ex_dividend_date > 2024 - 03 - 14 </ ex_dividend_date >
+                    < dividend > 0.7300 </ dividend >
+                    < dividend_yield > 0.0310770540655598 </ dividend_yield >
+                    < date > 2023 - 02 - 22 </ date >
+                    < ticker > GRMN </ ticker >
+                    < frequency > 4 </ frequency >
+                    < payable_date > 2024 - 03 - 29 </ payable_date >
+                    < name > Garmin </ name >
+                    < id > 642738f97dfba500019c64fa </ id >
+                    < updated > 1680292318 </ updated >
+                    < importance > 0 </ importance >
+                    < dividend_prior />
+                    < exchange > NYSE </ exchange >
+                    < currency > USD </ currency >
+              </ item >
+            */
+
+            XmlNodeList rows = data.SelectSingleNode("//result/dividends").SelectNodes("item");
+
+            foreach (XmlNode row in rows)
+            {           
+
+                Dividend div = new Dividend(row.SelectSingleNode("ticker").InnerText, row.SelectSingleNode("name").InnerText, dividendamount: row.SelectSingleNode("dividend").InnerText, row.SelectSingleNode("ex_dividend_date").InnerText, "NYSE");
+               
+                if (!_context.Dividends.Any(e => e.Symbol == row.SelectSingleNode("ticker").InnerText
+                    && e.DividendExDate == DateTime.Parse(row.SelectSingleNode("ex_dividend_date").InnerText, new CultureInfo("en-US", false))
+                    && e.DividendAmount == div.DividendAmount))
+                {
+                    _context.Dividends.Add(div);
+                }
+            }
+
+            _context.SaveChangesAsync();
+
+            return new JsonResult(true);
+        }
+
+        //
+
+        [HttpGet("pullnsasdaqdividendcalander")]
         public async Task<JsonResult> PullDividendCalander()
         {
             int count = 1;
@@ -211,19 +279,50 @@ namespace HLFundView.API
             return new JsonResult(true);
         }
 
-
-
-        [HttpGet("pullsharedata")]
-        public async Task<JsonResult> PullShareData()
+        [HttpGet("pullnysesharedata")]
+        public async Task<JsonResult> PullNYSEShareData()
         {
-            List<Dividend> dividends = _context.Dividends.Where(x => x.DividendExDate > DateTime.Now).ToList();
+            List<Dividend> dividends = _context.Dividends.Where(x => x.DividendExDate > DateTime.Now && x.Market == "NYSE").ToList();
+
+            foreach (Dividend dividend in dividends)
+            {
+
+                NyseData share;
+
+                try
+                {
+                    share = GetNYSEShareData(dividend.Symbol);
+
+                    dividend.UpdateCurrentPrice(share.candles[0].close);
+
+                    _context.Dividends.Attach(dividend);
+                    _context.Entry(dividend).Property(x => x.DividendPercent).IsModified = true;
+                    _context.Entry(dividend).Property(x => x.CurrentSharePrice).IsModified = true;
+
+                    await _context.SaveChangesAsync();
+                }
+                catch (Exception)
+                {
+
+                }
+
+
+            }
+
+            return new JsonResult(true);
+        }
+
+        [HttpGet("pullnasdaqsharedata")]
+        public async Task<JsonResult> PullNASDAQShareData()
+        {
+            List<Dividend> dividends = _context.Dividends.Where(x => x.DividendExDate > DateTime.Now && x.Market == "NASDAQ").ToList();
 
             foreach(Dividend dividend in dividends) {
 
                 ShareData share;
 
                 try {
-                    share = GetShareData(dividend.Symbol);
+                    share = GetNASDAQShareData(dividend.Symbol);
 
                     dividend.UpdateCurrentPrice(share.primaryData.lastSalePrice);
 
@@ -244,7 +343,10 @@ namespace HLFundView.API
             return new JsonResult(true);
         }
 
-        private ShareData GetShareData(string tickersymbol)
+
+
+
+        private ShareData GetNASDAQShareData(string tickersymbol)
         {
             var client = new RestClient("https://api.nasdaq.com/api/quote/" + tickersymbol + "/");
             var request = new RestRequest("info?assetclass=stocks", Method.Get);
@@ -259,6 +361,24 @@ namespace HLFundView.API
                 throw new Exception();
 
             return myDeserializedClass.data;
+        }
+
+
+        private NyseData GetNYSEShareData(string tickersymbol)
+        {
+            var client = new RestClient("https://data-api-next.benzinga.com/rest/v2/");
+            var request = new RestRequest("chart?apikey=81DC3A5A39D6D1A9D26FA6DF35A34&from=5m&interval=1d&symbol=" + tickersymbol, Method.Get);
+            request.AddHeader("Accept", "*/*");
+            request.AddHeader("User-Agent", "PostmanRuntime/7.32.2");
+
+            var queryResult = client.Execute(request);
+
+            NyseData myDeserializedClass = JsonConvert.DeserializeObject<NyseData>(queryResult.Content);
+
+            if (myDeserializedClass == null || myDeserializedClass.candles.Count == 0)
+                throw new Exception();
+
+            return myDeserializedClass;
         }
 
         private List<Row> GetCalanderData(string date)
