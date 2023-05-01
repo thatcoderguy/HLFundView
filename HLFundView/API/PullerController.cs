@@ -1,6 +1,7 @@
 ﻿using BitMiracle.Docotic.Pdf;
 using HLFundView.Data;
 using HLFundView.Models;
+using HtmlAgilityPack;
 using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.VisualBasic.Syntax;
@@ -87,6 +88,53 @@ namespace HLFundView.API
             return new JsonResult(true);
         }
 
+        [HttpGet("pulllsedividenddata")]
+        public async Task<JsonResult> PullLSEDividendData()
+        {
+
+            var client = new RestClient("https://www.dividenddata.co.uk/");
+
+            var request = new RestRequest("", Method.Get);
+
+            var queryResult = client.Execute(request);
+
+            HtmlDocument document = new HtmlDocument();
+            document.LoadHtml(queryResult.Content);
+
+
+            HtmlNodeCollection rows = document.DocumentNode.SelectSingleNode("//div[@class='table-responsive']").SelectSingleNode("//table/tbody").SelectNodes("tr");
+
+            foreach(HtmlNode row in rows)
+            {
+                //EPIC  0
+                //Name  1
+                //Market    2
+                //Share Price   3
+                ////Dividend    4
+                //Div Impact    5
+                //Declaration Date  6
+                ////Ex - Dividend Date ▲    7
+                ///Payment Date 8
+                ///
+
+                HtmlNodeCollection cols = row.SelectNodes("td");
+
+                Dividend div = new Dividend(cols[0].InnerText, cols[1].InnerText, cols[7].InnerText, "LSE");
+                div.AddPriceAndDividendData(cols[3].InnerText, cols[4].InnerText);
+
+                if (!_context.Dividends.Any(e => e.Symbol == cols[0].InnerText
+                    && e.DividendExDate == DateTime.Parse(cols[7].InnerText, new CultureInfo("en-US", false))
+                    && e.DividendAmount == div.DividendAmount))
+                {
+                    _context.Dividends.Add(div);
+                }
+            }
+
+            _context.SaveChangesAsync();
+
+            return new JsonResult(true);
+        }
+
         [HttpGet("pulldividendcalander")]
         public async Task<JsonResult> PullDividendCalander()
         {
@@ -122,7 +170,7 @@ namespace HLFundView.API
 
                         //ShareData share = GetShareData(row.symbol);
 
-                        Dividend div = new Dividend(row.symbol, row.companyName, row.indicated_Annual_Dividend, row.dividend_Ex_Date);
+                        Dividend div = new Dividend(row.symbol, row.companyName, row.indicated_Annual_Dividend, row.dividend_Ex_Date, "NASDAQ");
 
                         if (!_context.Dividends.Any(e => e.Symbol == row.symbol 
                                 && e.DividendExDate == DateTime.Parse(row.dividend_Ex_Date, new CultureInfo("en-US", false))

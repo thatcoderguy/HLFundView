@@ -5,8 +5,12 @@
 }
 
 <div id="puller" class="wrapper">
-    <button type="button" class="btn btn-primary btn-lg" @@click="getdividentcalander()" :disabled="buttondisabled === true">Pull Dividend Calender Data</button>
-    <button type="button" class="btn btn-primary btn-lg" @@click="getsharedata()" :disabled="buttondisabled === true">Pull Share Data</button>
+    <button type="button" class="btn btn-primary btn-lg" @@click="getdividentcalander()" :disabled="buttondisabled === true">Pull NASDAQ Dividend Calender Data</button>
+    <button type="button" class="btn btn-primary btn-lg" @@click="getsharedata()" :disabled="buttondisabled === true">Pull NASDAQ Share Data</button>
+
+    <br /><hr/>
+    <button type="button" class="btn btn-primary btn-lg" @@click="getlsedividenddata()" :disabled="buttondisabled === true">Pull LSE Dividend Data</button>
+
 </div>
 
 
